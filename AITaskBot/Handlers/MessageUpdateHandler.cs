@@ -48,7 +48,7 @@ public class MessageUpdateHandler : IMessageUpdateRouter
 
     public Task HandleErrorAsync(ITelegramBotClient bot, Exception exception, CancellationToken ct)
     {
-        Console.WriteLine("Ошибка: " + exception.Message);
+        Log.E(exception, "Ошибка при обработке обновления Telegram.");
         return Task.CompletedTask;
     }
 }

@@ -1,6 +1,5 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 
 namespace TaskManager;
@@ -8,15 +7,13 @@ namespace TaskManager;
 public sealed class NotificationScheduler : BackgroundService
 {
     private readonly ITelegramBotClient _botClient;
-    private readonly ILogger<NotificationScheduler> _logger;
 
     // Чтобы не спамить после наступления времени — запоминаем, кому за сегодняшний день уже отправляли.
     private readonly ConcurrentDictionary<long, DateOnly> _notifiedForDate = new();
 
-    public NotificationScheduler(ITelegramBotClient botClient, ILogger<NotificationScheduler> logger)
+    public NotificationScheduler(ITelegramBotClient botClient)
     {
         _botClient = botClient;
-        _logger = logger;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -25,12 +22,15 @@ public sealed class NotificationScheduler : BackgroundService
         var period = TimeSpan.FromMinutes(1);
         try
         {
+            Log.I("Запуск фонового планировщика уведомлений.");
+
             // Немедленный запуск (без overlap — один поток BackgroundService)
             await TickAsync(stoppingToken);
 
             using var timer = new PeriodicTimer(period);
             while (await timer.WaitForNextTickAsync(stoppingToken))
             {
+                Log.D("Новый тик планировщика уведомлений.");
                 await TickAsync(stoppingToken);
             }
         }
@@ -40,8 +40,12 @@ public sealed class NotificationScheduler : BackgroundService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Фоновый планировщик уведомлений аварийно завершился.");
+            Log.C(ex, "Фоновый планировщик уведомлений аварийно завершился.");
             // Опционально: можно повторно пробросить, если требуется падение хоста
+        }
+        finally
+        {
+            Log.I("Фоновый планировщик уведомлений остановлен.");
         }
     }
 
@@ -103,6 +107,7 @@ public sealed class NotificationScheduler : BackgroundService
                 {
                     await _botClient.SendTextMessageAsync(chatId: userId, text: text, cancellationToken: ct);
                     _notifiedForDate[userId] = userToday;
+                    Log.I($"Отправлено напоминание пользователю {userId} за {userToday:yyyy-MM-dd}.");
                 }
                 catch (OperationCanceledException)
                 {
@@ -110,7 +115,8 @@ public sealed class NotificationScheduler : BackgroundService
                 }
                 catch (Exception sendEx)
                 {
-                    _logger.LogWarning(sendEx, "Не удалось отправить напоминание пользователю {UserId}.", userId);
+                    Log.W($"Не удалось отправить напоминание пользователю {userId}: {sendEx.Message}");
+                    Log.D($"StackTrace: {sendEx.StackTrace ?? "<нет стека>"}");
                 }
             }
         }
@@ -120,7 +126,7 @@ public sealed class NotificationScheduler : BackgroundService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка в тикe планировщика уведомлений.");
+            Log.E(ex, "Ошибка в тикe планировщика уведомлений.");
         }
     }
 
@@ -134,8 +140,10 @@ public sealed class NotificationScheduler : BackgroundService
             var reports = DatabaseHelper.GetReportsByDateRange(from, to);
             return reports.Any(r => r.UserId == userId.ToString());
         }
-        catch
+        catch (Exception ex)
         {
+            Log.W($"Не удалось проверить наличие отчёта пользователя {userId} за {date:yyyy-MM-dd}: {ex.Message}");
+            Log.D($"StackTrace: {ex.StackTrace ?? "<нет стека>"}");
             return false;
         }
     }
@@ -153,8 +161,10 @@ public sealed class NotificationScheduler : BackgroundService
         {
             return TimeZoneInfo.FindSystemTimeZoneById(timeZoneId);
         }
-        catch
+        catch (Exception ex)
         {
+            Log.W($"Не удалось определить таймзону '{timeZoneId}': {ex.Message}. Используем UTC+04:00.");
+            Log.D($"StackTrace: {ex.StackTrace ?? "<нет стека>"}");
             // Фоллбэк на дефолт UTC+04:00
             return TimeZoneInfo.CreateCustomTimeZone("UTC+04:00", TimeSpan.FromHours(4), "UTC+04:00", "UTC+04:00");
         }
