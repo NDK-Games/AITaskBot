@@ -1,0 +1,66 @@
+# === .NET build ===
+bin/
+obj/
+[Bb]uild/
+[Ll]og/
+[Ll]ogs/
+[Kk]eys/
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+
+# === Visual Studio / Rider ===
+.vs/
+.idea/
+*.sln.iml
+
+# === Rider cache ===
+*.DotSettings.user
+
+# === OS files ===
+.DS_Store
+Thumbs.db
+
+# === Test results ===
+TestResult*/
+[Test]Result.xml
+*.coverage
+*.coveragexml
+
+# === Packages ===
+*.nupkg
+*.snupkg
+*.nuspec
+packages/
+*.dll
+*.exe
+*.pdb
+
+# === Docker ===
+*.dockerfile
+*.tar
+.env
+.env.*
+
+# === Logs ===
+*.log
+
+# === Publish output ===
+/publish/
+/out/
+/app/
+
+# === Redis dump / data ===
+dump.rdb
+appendonly.aof
+
+# === Rider plugin files ===
+.idea/.idea.*
+
+# === JetBrains Fleet ===
+.fleet/
+
+# === VS Code ===
+.vscode/
