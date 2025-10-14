@@ -14,6 +14,8 @@ class Program
             DatabaseHelper.AddOrUpdateAccount(acc.TelegramUserId.ToString(), acc.Role);
         }
 
+        Log.I("Инициализация хоста TaskManager.");
+
         var host = Host.CreateDefaultBuilder()
             .ConfigureServices(services =>
             {
@@ -40,6 +42,8 @@ class Program
             })
             .Build();
 
+        Log.I("Фоновые службы запущены. Ожидание завершения...");
         await host.RunAsync();
+        Log.I("Хост TaskManager остановлен.");
     }
 }
