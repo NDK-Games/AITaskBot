@@ -38,4 +38,10 @@
         </None>
     </ItemGroup>
 
+    <ItemGroup>
+      <Content Include="..\.env.debug">
+        <Link>.env.debug</Link>
+      </Content>
+    </ItemGroup>
+
 </Project>
