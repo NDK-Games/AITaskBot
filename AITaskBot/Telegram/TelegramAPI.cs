@@ -2,9 +2,9 @@ using Newtonsoft.Json.Linq;
 
 namespace TaskManager;
 
-public class TelegramAPI
+public static class TelegramAPI
 {
-    public static readonly string Token = "7871417211:AAF909xkfaGV0mb-G_w4JJy7eqwuIM9PYvc";
+    public static string Token => Environment.TelegramBotToken;
 
     public static async Task<string> GetUserFullName(long userId)
     {
