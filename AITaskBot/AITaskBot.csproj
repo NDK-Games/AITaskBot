@@ -27,21 +27,16 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\.env.release" Condition="Exists('..\.env.release')">
-            <Link>.env.release</Link>
+        <None Include="..\.env.debug">
+            <Link>.env.debug</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         </None>
         <None Include="..\.env.release">
+            <Link>.env.release</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         </None>
-    </ItemGroup>
-
-    <ItemGroup>
-      <Content Include="..\.env.debug">
-        <Link>.env.debug</Link>
-      </Content>
     </ItemGroup>
 
 </Project>
