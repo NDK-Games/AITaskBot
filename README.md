@@ -145,7 +145,7 @@ ExecStart=/opt/apps/ai_task_bot/out/AITaskBot
 
 # Файл окружения (.env.production)
 Environment=DOTNET_ENVIRONMENT=Release
-EnvironmentFile=/opt/apps/ai_task_bot/out/.env.production
+EnvironmentFile=/opt/apps/ai_task_bot/out/.env.release
 
 # Логирование
 StandardOutput=journal
