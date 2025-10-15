@@ -141,9 +141,10 @@ Group=deploy
 WorkingDirectory=/opt/apps/ai_task_bot/out/
 
 # Основной исполняемый файл
-ExecStart=/opt/apps/ai_task_bot/out/
+ExecStart=/opt/apps/ai_task_bot/out/AITaskBot
 
 # Файл окружения (.env.production)
+Environment=DOTNET_ENVIRONMENT=Release
 EnvironmentFile=/opt/apps/ai_task_bot/out/.env.production
 
 # Логирование
@@ -162,25 +163,41 @@ TimeoutStopSec=15
 [Install]
 WantedBy=multi-user.target
 ```
-6. Примените юнит и запустите сервис:
+
+6. Права и исполняемый файл
+```bash
+# права и владельцы
+sudo chown -R deploy:deploy /opt/apps/ai_task_bot
+sudo chmod 755 /opt/apps /opt/apps/ai_task_bot /opt/apps/ai_task_bot/out
+sudo chmod +x /opt/apps/ai_task_bot/out/AITaskBot
+sudo chmod 600 /opt/apps/ai_task_bot/out/.env.release
+
+# быстрые проверки
+test -f /opt/apps/ai_task_bot/out/.env.release && echo OK:env
+head -n 20 /opt/apps/ai_task_bot/out/.env.release
+```
+
+7. Примените юнит и запустите сервис:
 ```bash
 sudo systemctl daemon-reload
-sudo systemctl enable aitaskbot
-sudo systemctl restart aitaskbot
+sudo systemctl enable ai_task_bot
+sudo systemctl restart ai_task_bot
+sudo systemctl status ai_task_bot --no-pager
+journalctl -u ai_task_bot -n 200 --no-pager
 ```
-7. Проверьте, что файлы и права выставлены корректно, а бинарь доступен для запуска:
+8. Проверьте, что файлы и права выставлены корректно, а бинарь доступен для запуска:
 ```bash
-ls -la /opt/apps/aitaskbot/out
-test -x /opt/apps/aitaskbot/out/AITaskBot && echo OK:exec
-test -f /opt/apps/aitaskbot/out/.env.release && echo OK:env || echo WARN:no-env
-test -d /opt/apps/aitaskbot/out && echo OK:dir
-mkdir -p /opt/apps/aitaskbot/.cache && chown -R deploy:deploy /opt/apps/aitaskbot
+ls -la /opt/apps/ai_task_bot/out
+test -x /opt/apps/ai_task_bot/out/AITaskBot && echo OK:exec
+test -f /opt/apps/ai_task_bot/out/.env.release && echo OK:env || echo WARN:no-env
+test -d /opt/apps/ai_task_bot/out && echo OK:dir
+mkdir -p /opt/apps/ai_task_bot/.cache && chown -R deploy:deploy /opt/apps/ai_task_bot
 ```
-8. Для диагностики состояния и логов используйте стандартные команды `systemd`:
+9. Для диагностики состояния и логов используйте стандартные команды `systemd`:
 ```bash
-sudo systemctl status aitaskbot
-sudo journalctl -u aitaskbot -n 200 --no-pager
-sudo journalctl -u aitaskbot -f
+sudo systemctl status ai_task_bot
+sudo journalctl -u ai_task_bot -n 100 --no-pager
+sudo journalctl -u ai_task_bot -f
 ```
    При необходимости можно запустить бинарь вручную от пользователя `deploy` для локальной проверки:
 ```bash
