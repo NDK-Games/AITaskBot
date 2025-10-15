@@ -1,6 +1,8 @@
 # === .NET build ===
-bin/
-obj/
+**/bin/
+**/obj/
+**/publish/
+**/out/
 [Bb]uild/
 [Ll]og/
 [Ll]ogs/
