@@ -9,13 +9,20 @@
         <LangVersion>latestmajor</LangVersion>
     </PropertyGroup>
 
-    <!-- Параметры публикации под Linux x64 Release -->
-    <PropertyGroup Condition="'$(Configuration)'=='Release' and '$(RuntimeIdentifier)'=='linux-x64'">
+    <PropertyGroup Condition="'$(Configuration)|$(RuntimeIdentifier)'=='Release|linux-x64'">
+        <!-- Параметры публикации под Linux x64 -->
+        <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
         <SelfContained>true</SelfContained>
         <PublishSingleFile>true</PublishSingleFile>
         <PublishReadyToRun>true</PublishReadyToRun>
-        <!-- Единый, предсказуемый путь публикации -->
-        <PublishDir>$(MSBuildProjectDirectory)/bin/Release/$(TargetFramework)/$(RuntimeIdentifier)/publish/</PublishDir>
+        <InvariantGlobalization>true</InvariantGlobalization>
+
+        <!-- Отключаем отладочные артефакты -->
+        <DebugType>none</DebugType>
+        <DebugSymbols>false</DebugSymbols>
+
+        <!-- Предсказуемый путь вывода -->
+        <PublishDir>$(MSBuildProjectDirectory)/publish/linux-x64/</PublishDir>
     </PropertyGroup>
 
     <ItemGroup>
@@ -33,6 +40,11 @@
             <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
         </None>
         <None Include="..\.env.release">
+            <Link>.env.release</Link>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        </None>
+        <None Include="..\DailyReports.db">
             <Link>.env.release</Link>
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>

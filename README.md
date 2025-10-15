@@ -51,7 +51,7 @@ AITaskBot — консольное приложение на .NET 6, прини�
 ## Подготовка окружения и ключей
 
 ### Предварительные требования
-- .NET SDK 6.0 или выше (см. `global.json`).  
+- .NET SDK 9.0 или выше (см. `global.json`).  
 - Доступ к Telegram Bot API и токен бота.  
 - Возможность писать в файловую систему для `DailyReports.db`.
 
@@ -101,23 +101,15 @@ dotnet run --project AITaskBot/AITaskBot.csproj
 
 ### Развертывание на сервере
 1. Соберите релизную версию и подготовьте артефакты публикации:
-   ```bash
-   dotnet publish AITaskBot/AITaskBot.csproj \
-      -c Release \
-      -r linux-x64 \
-      --self-contained true \
-      -p:PublishSingleFile=true \
-      -p:PublishReadyToRun=true \
-      -p:InvariantGlobalization=true \
-      -p:DebugType=None -p:DebugSymbols=false \
-      -o ./publish/linux-x64
-   ```
+```bash
+dotnet publish AITaskBot/AITaskBot.csproj -c Release -r linux-x64
+```
 2. Создайте на сервере структуру каталогов и выдайте права пользователю, под которым будет работать сервис. Пример для пользователя `deploy`:
-   ```bash
-   ssh -t deploy@server.example "sudo mkdir -p /opt/apps/aitaskbot/out
-   sudo chown -R deploy:deploy /opt/apps/aitaskbot
-   sudo chmod -R 755 /opt/apps/aitaskbot"
-   ```
+```bash
+ssh -t deploy@server.example "sudo mkdir -p /opt/apps/aitaskbot/out
+sudo chown -R deploy:deploy /opt/apps/aitaskbot
+sudo chmod -R 755 /opt/apps/aitaskbot"
+```
 3. Передайте собранные файлы и минимальную конфигурацию (например, `appsettings.Production.json`, файл БД, ключи) на сервер:
    ```bash
    rsync -az --delete ./publish/linux-x64/ deploy@server.example:/opt/apps/aitaskbot/out/
