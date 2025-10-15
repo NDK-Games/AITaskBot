@@ -106,80 +106,88 @@ dotnet publish AITaskBot/AITaskBot.csproj -c Release -r linux-x64
 ```
 2. Создайте на сервере структуру каталогов и выдайте права пользователю, под которым будет работать сервис. Пример для пользователя `deploy`:
 ```bash
-ssh -t deploy@server.example "sudo mkdir -p /opt/apps/aitaskbot/out
-sudo chown -R deploy:deploy /opt/apps/aitaskbot
-sudo chmod -R 755 /opt/apps/aitaskbot"
+ssh -t deploy@93.183.127.232 "sudo mkdir -p /opt/apps/ai_task_bot/out
+sudo chown -R deploy:deploy /opt/apps/ai_task_bot
+sudo chmod -R 755 /opt/apps/ai_task_bot"
 ```
-3. Передайте собранные файлы и минимальную конфигурацию (например, `appsettings.Production.json`, файл БД, ключи) на сервер:
-   ```bash
-   rsync -az --delete ./publish/linux-x64/ deploy@server.example:/opt/apps/aitaskbot/out/
-   ```
+3. Передайте собранные файлы и минимальную конфигурацию на сервер:
+```bash
+rsync -az --delete ./publish/linux-x64/ deploy@93.183.127.232:/opt/apps/ai_task_bot/out/
+```
    При первом запуске `DailyReports.db` создается автоматически в каталоге запуска; при миграции существующую базу можно скопировать вместе с бинарем.
 4. (Опционально) подготовьте файл окружения с настройками токена и путей. Пример минимального `.env.release` рядом с бинарем:
-   ```bash
-   TELEGRAM__BOT_TOKEN=1234567890:ABCDEF
-   TELEGRAM__ADMIN_IDS=123456789,987654321
-   DATABASE__FILE=DailyReports.db
-   ```
+```bash
+TELEGRAM__BOT_TOKEN=1234567890:ABCDEF
+TELEGRAM__ADMIN_IDS=123456789,987654321
+DATABASE__FILE=DailyReports.db
+```
 5. Создайте unit-файл `systemd`, чтобы бот стартовал автоматически. Сохраните конфигурацию в `/etc/systemd/system/aitaskbot.service`:
-   ```ini
-   [Unit]
-   Description=AITaskBot
-   After=network-online.target
-   Wants=network-online.target
+```bash
+sudo nano /etc/systemd/system/ai_task_bot.service
+```
 
-   [Service]
-   User=deploy
-   Group=deploy
+```ini
+[Unit]
+Description=AITaskBot
+After=network-online.target
+Wants=network-online.target
 
-   WorkingDirectory=/opt/apps/aitaskbot/out
-   ExecStart=/opt/apps/aitaskbot/out/AITaskBot
-   EnvironmentFile=/opt/apps/aitaskbot/out/.env.release
+[Service]
+# Пользователь и группа под которыми будет работать бот
+User=deploy
+Group=deploy
 
-   Environment=DOTNET_BUNDLE_EXTRACT_BASE_DIR=/opt/apps/aitaskbot/.cache
-   Environment=DOTNET_ENVIRONMENT=Production
-   Environment=DOTNET_CLI_TELEMETRY_OPTOUT=1
+# Рабочая директория
+WorkingDirectory=/opt/apps/ai_task_bot/out/
 
-   StandardOutput=journal
-   StandardError=journal
-   SyslogIdentifier=aitaskbot
+# Основной исполняемый файл
+ExecStart=/opt/apps/ai_task_bot/out/
 
-   Restart=always
-   RestartSec=5
+# Файл окружения (.env.production)
+EnvironmentFile=/opt/apps/ai_task_bot/out/.env.production
 
-   # Таймауты и ограничения
-   TimeoutStartSec=30
-   TimeoutStopSec=15
+# Логирование
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=ai_task_bot
 
-   [Install]
-   WantedBy=multi-user.target
-   ```
+# Автоматический рестарт при падении
+Restart=always
+RestartSec=5
+
+# Таймауты и ограничения
+TimeoutStartSec=30
+TimeoutStopSec=15
+
+[Install]
+WantedBy=multi-user.target
+```
 6. Примените юнит и запустите сервис:
-   ```bash
-   sudo systemctl daemon-reload
-   sudo systemctl enable aitaskbot
-   sudo systemctl restart aitaskbot
-   ```
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable aitaskbot
+sudo systemctl restart aitaskbot
+```
 7. Проверьте, что файлы и права выставлены корректно, а бинарь доступен для запуска:
-   ```bash
-   ls -la /opt/apps/aitaskbot/out
-   test -x /opt/apps/aitaskbot/out/AITaskBot && echo OK:exec
-   test -f /opt/apps/aitaskbot/out/.env.release && echo OK:env || echo WARN:no-env
-   test -d /opt/apps/aitaskbot/out && echo OK:dir
-   mkdir -p /opt/apps/aitaskbot/.cache && chown -R deploy:deploy /opt/apps/aitaskbot
-   ```
+```bash
+ls -la /opt/apps/aitaskbot/out
+test -x /opt/apps/aitaskbot/out/AITaskBot && echo OK:exec
+test -f /opt/apps/aitaskbot/out/.env.release && echo OK:env || echo WARN:no-env
+test -d /opt/apps/aitaskbot/out && echo OK:dir
+mkdir -p /opt/apps/aitaskbot/.cache && chown -R deploy:deploy /opt/apps/aitaskbot
+```
 8. Для диагностики состояния и логов используйте стандартные команды `systemd`:
-   ```bash
-   sudo systemctl status aitaskbot
-   sudo journalctl -u aitaskbot -n 200 --no-pager
-   sudo journalctl -u aitaskbot -f
-   ```
+```bash
+sudo systemctl status aitaskbot
+sudo journalctl -u aitaskbot -n 200 --no-pager
+sudo journalctl -u aitaskbot -f
+```
    При необходимости можно запустить бинарь вручную от пользователя `deploy` для локальной проверки:
-   ```bash
-   sudo -u deploy env -i DOTNET_BUNDLE_EXTRACT_BASE_DIR=/opt/apps/aitaskbot/.cache \
-      $(grep -v '^\s*$' /opt/apps/aitaskbot/out/.env.release | sed 's/^/ /') \
-      /opt/apps/aitaskbot/out/AITaskBot
-   ```
+```bash
+sudo -u deploy env -i DOTNET_BUNDLE_EXTRACT_BASE_DIR=/opt/apps/aitaskbot/.cache \
+  $(grep -v '^\s*$' /opt/apps/aitaskbot/out/.env.release | sed 's/^/ /') \
+  /opt/apps/aitaskbot/out/AITaskBot
+```
 
 ---
 
